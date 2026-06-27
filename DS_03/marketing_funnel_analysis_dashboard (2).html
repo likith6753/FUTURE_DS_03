@@ -1,0 +1,216 @@
+
+<h2 class="sr-only">Marketing and lead funnel analysis dashboard showing conversion rates, drop-off points, and channel performance across visitors, leads, MQLs, SQLs, and customers.</h2>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:transparent}
+.dash{padding:1.5rem 0}
+.section-label{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.75rem}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1.5rem}
+.kpi{background:var(--surface-1);border-radius:var(--radius);padding:.875rem 1rem}
+.kpi-val{font-size:22px;font-weight:500;color:var(--text-primary);line-height:1.1}
+.kpi-label{font-size:12px;color:var(--text-muted);margin-top:3px}
+.kpi-delta{font-size:11px;margin-top:4px}
+.up{color:#0ca30c}.dn{color:#d03b3b}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem}
+.card{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:1rem 1.25rem}
+.chart-wrap{position:relative;width:100%}
+.funnel-wrap{display:flex;flex-direction:column;gap:8px;margin-top:.5rem}
+.funnel-stage{display:flex;align-items:center;gap:10px}
+.funnel-bar-bg{flex:1;background:var(--surface-1);border-radius:4px;height:32px;overflow:hidden;position:relative}
+.funnel-bar{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;transition:width .6s ease}
+.funnel-label{font-size:12px;color:var(--text-secondary);min-width:72px}
+.funnel-val{font-size:11px;font-weight:500;min-width:52px;text-align:right;color:var(--text-muted)}
+.funnel-drop{font-size:10px;color:#d03b3b;min-width:44px;text-align:right}
+.tabs{display:flex;gap:6px;margin-bottom:1rem}
+.tab{padding:5px 12px;border-radius:var(--radius);border:0.5px solid var(--border);font-size:12px;cursor:pointer;background:transparent;color:var(--text-secondary)}
+.tab.active{background:var(--surface-1);color:var(--text-primary);border-color:var(--border-strong)}
+.ch-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border)}
+.ch-row:last-child{border-bottom:none}
+.ch-name{font-size:13px;color:var(--text-primary);min-width:100px}
+.ch-bar-bg{flex:1;height:8px;background:var(--surface-1);border-radius:4px;overflow:hidden}
+.ch-bar{height:100%;border-radius:4px}
+.ch-pct{font-size:12px;color:var(--text-muted);min-width:38px;text-align:right}
+.ch-cost{font-size:12px;color:var(--text-secondary);min-width:54px;text-align:right}
+.rec-list{display:flex;flex-direction:column;gap:8px;margin-top:.5rem}
+.rec-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--surface-1);border-radius:var(--radius);border-left:3px solid}
+.rec-icon{font-size:16px;margin-top:1px;flex-shrink:0}
+.rec-text{font-size:13px;color:var(--text-secondary);line-height:1.5}
+.rec-text strong{color:var(--text-primary);font-weight:500}
+.trend-legend{display:flex;gap:14px;margin-bottom:8px}
+.trend-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px}
+.full-card{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem}
+</style>
+
+<div class="dash">
+  <p class="section-label">Funnel overview · Q2 2025</p>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-val">84.2K</div><div class="kpi-label">Total visitors</div><div class="kpi-delta up">↑ 12% vs Q1</div></div>
+    <div class="kpi"><div class="kpi-val">6,318</div><div class="kpi-label">Leads</div><div class="kpi-delta up">↑ 8% vs Q1</div></div>
+    <div class="kpi"><div class="kpi-val">1,896</div><div class="kpi-label">MQLs</div><div class="kpi-delta dn">↓ 3% vs Q1</div></div>
+    <div class="kpi"><div class="kpi-val">758</div><div class="kpi-label">SQLs</div><div class="kpi-delta up">↑ 5% vs Q1</div></div>
+    <div class="kpi"><div class="kpi-val">303</div><div class="kpi-label">Customers</div><div class="kpi-delta up">↑ 18% vs Q1</div></div>
+  </div>
+
+  <div class="full-card">
+    <p class="section-label">Conversion funnel — drop-off at each stage</p>
+    <div class="funnel-wrap" id="funnelWrap"></div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <p class="section-label">Conversion by channel</p>
+      <div class="tabs">
+        <button class="tab active" onclick="showChannel('conv',this)">Conversion %</button>
+        <button class="tab" onclick="showChannel('cost',this)">Cost per lead</button>
+      </div>
+      <div id="channelViz"></div>
+    </div>
+    <div class="card">
+      <p class="section-label">Monthly trend — leads vs customers</p>
+      <div class="trend-legend" style="margin-top:.25rem">
+        <span><span class="trend-dot" style="background:#2a78d6"></span><span style="font-size:12px;color:var(--text-secondary)">Leads</span></span>
+        <span><span class="trend-dot" style="background:#1baf7a"></span><span style="font-size:12px;color:var(--text-secondary)">Customers</span></span>
+      </div>
+      <div class="chart-wrap" style="height:190px"><canvas id="trendChart" role="img" aria-label="Line chart showing monthly leads and customers over 6 months from January to June 2025">Leads ranged from 880 to 1150, customers from 38 to 60, with both trending upward.</canvas></div>
+    </div>
+  </div>
+
+  <div class="full-card">
+    <p class="section-label">Stage-by-stage conversion rates</p>
+    <div class="chart-wrap" style="height:200px"><canvas id="convChart" role="img" aria-label="Bar chart showing conversion rates at each funnel stage: visitor to lead 7.5%, lead to MQL 30%, MQL to SQL 40%, SQL to customer 40%">Visitor-to-lead 7.5%, lead-to-MQL 30%, MQL-to-SQL 40%, SQL-to-customer 40%.</canvas></div>
+  </div>
+
+  <div class="full-card">
+    <p class="section-label">Recommendations</p>
+    <div class="rec-list">
+      <div class="rec-item" style="border-color:#d03b3b">
+        <i class="ti ti-alert-triangle rec-icon" style="color:#d03b3b" aria-hidden="true"></i>
+        <div class="rec-text"><strong>Critical: top-of-funnel drop-off.</strong> Only 7.5% of visitors convert to leads — the biggest leak in the funnel. A/B test landing page CTAs, reduce form fields to 3 or fewer, and add exit-intent popups to recapture bouncing traffic.</div>
+      </div>
+      <div class="rec-item" style="border-color:#eda100">
+        <i class="ti ti-target rec-icon" style="color:#eda100" aria-hidden="true"></i>
+        <div class="rec-text"><strong>Scale paid search — highest lead conversion.</strong> Paid search converts at 11.2% vs 5.8% organic average. Increasing paid search budget by 30% could yield ~420 additional leads per month at the current CPL of $34.</div>
+      </div>
+      <div class="rec-item" style="border-color:#2a78d6">
+        <i class="ti ti-users rec-icon" style="color:#2a78d6" aria-hidden="true"></i>
+        <div class="rec-text"><strong>Improve lead-to-MQL nurture.</strong> 70% of leads don't qualify. Implement a lead scoring model (firmographics + behavior) and a 3-email drip sequence within 48 hours of signup to surface high-intent buyers faster.</div>
+      </div>
+      <div class="rec-item" style="border-color:#1baf7a">
+        <i class="ti ti-chart-line rec-icon" style="color:#1baf7a" aria-hidden="true"></i>
+        <div class="rec-text"><strong>Double down on referral — lowest CPL at $18.</strong> Referral has the best cost efficiency but low volume. Launch a structured referral program with incentives (e.g. 1 month free) to scale this channel from 8% to 20% of total lead mix.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:.5rem 0">
+    <button onclick="sendPrompt('Which funnel stage should I optimize first to maximize revenue impact?')" style="font-size:13px;padding:7px 18px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;cursor:pointer;color:var(--text-secondary)">Ask: where to focus first ↗</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const stages = [
+  {name:'Visitors', val:84200, pct:100, color:'#2a78d6', drop:null},
+  {name:'Leads', val:6318, pct:7.5, color:'#1baf7a', drop:'92.5%'},
+  {name:'MQLs', val:1896, pct:30.0, color:'#eda100', drop:'70.0%'},
+  {name:'SQLs', val:758, pct:40.0, color:'#e34948', drop:'60.0%'},
+  {name:'Customers', val:303, pct:40.0, color:'#4a3aa7', drop:'60.0%'},
+];
+
+const wrap = document.getElementById('funnelWrap');
+stages.forEach((s,i)=>{
+  const barW = i===0 ? 100 : (s.val/84200)*100;
+  const row = document.createElement('div');
+  row.className='funnel-stage';
+  row.innerHTML=`
+    <span class="funnel-label">${s.name}</span>
+    <div class="funnel-bar-bg">
+      <div class="funnel-bar" style="width:${barW}%;background:${s.color};opacity:0.82"></div>
+    </div>
+    <span class="funnel-val">${s.val.toLocaleString()}</span>
+    <span class="funnel-drop">${s.drop ? '−'+s.drop : ''}</span>
+  `;
+  wrap.appendChild(row);
+});
+
+const channels = [
+  {name:'Paid search', conv:11.2, cpl:34, color:'#2a78d6'},
+  {name:'Organic SEO', conv:8.4, cpl:22, color:'#1baf7a'},
+  {name:'Email', conv:7.1, cpl:12, color:'#eda100'},
+  {name:'Social', conv:4.3, cpl:48, color:'#4a3aa7'},
+  {name:'Referral', conv:9.8, cpl:18, color:'#e34948'},
+  {name:'Direct', conv:5.6, cpl:0, color:'#888780'},
+];
+
+let activeMode = 'conv';
+function showChannel(mode, btn){
+  activeMode=mode;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderChannels();
+}
+function renderChannels(){
+  const viz = document.getElementById('channelViz');
+  const maxConv = Math.max(...channels.map(c=>c.conv));
+  const maxCpl = Math.max(...channels.map(c=>c.cpl));
+  viz.innerHTML = channels.map(c=>{
+    const pct = activeMode==='conv' ? (c.conv/maxConv*100) : (c.cpl/maxCpl*100);
+    const label = activeMode==='conv' ? c.conv.toFixed(1)+'%' : (c.cpl===0?'Organic':'$'+c.cpl);
+    return `<div class="ch-row">
+      <span class="ch-name">${c.name}</span>
+      <div class="ch-bar-bg"><div class="ch-bar" style="width:${pct}%;background:${c.color};opacity:0.8"></div></div>
+      <span class="ch-pct">${label}</span>
+    </div>`;
+  }).join('');
+}
+renderChannels();
+
+const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+const textColor = isDark ? '#898781' : '#898781';
+
+const trendCtx = document.getElementById('trendChart').getContext('2d');
+new Chart(trendCtx,{
+  type:'line',
+  data:{
+    labels:['Jan','Feb','Mar','Apr','May','Jun'],
+    datasets:[
+      {label:'Leads',data:[880,940,1010,1080,1160,1248],borderColor:'#2a78d6',backgroundColor:'rgba(42,120,214,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#2a78d6',tension:.35,fill:true,pointStyle:'circle'},
+      {label:'Customers',data:[38,41,46,52,57,60],borderColor:'#1baf7a',backgroundColor:'rgba(27,175,122,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#1baf7a',tension:.35,fill:true,yAxisID:'y2',pointStyle:'rect'},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+    scales:{
+      x:{grid:{color:gridColor},ticks:{color:textColor,font:{size:11}}},
+      y:{grid:{color:gridColor},ticks:{color:textColor,font:{size:11}},title:{display:true,text:'Leads',color:textColor,font:{size:10}}},
+      y2:{position:'right',grid:{display:false},ticks:{color:textColor,font:{size:11}},title:{display:true,text:'Customers',color:textColor,font:{size:10}}}
+    }
+  }
+});
+
+const convCtx = document.getElementById('convChart').getContext('2d');
+new Chart(convCtx,{
+  type:'bar',
+  data:{
+    labels:['Visitor → Lead','Lead → MQL','MQL → SQL','SQL → Customer'],
+    datasets:[{
+      label:'Conversion rate %',
+      data:[7.5,30,40,40],
+      backgroundColor:['rgba(227,73,72,0.82)','rgba(237,161,0,0.82)','rgba(27,175,122,0.82)','rgba(74,58,167,0.82)'],
+      borderRadius:4,
+      borderSkipped:false,
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y.toFixed(1)+'%'}}},
+    scales:{
+      x:{grid:{display:false},ticks:{color:textColor,font:{size:11}},ticks:{autoSkip:false,maxRotation:0,color:textColor,font:{size:11}}},
+      y:{grid:{color:gridColor},ticks:{color:textColor,font:{size:11},callback:v=>v+'%'},max:50,min:0}
+    }
+  }
+});
+</script>
